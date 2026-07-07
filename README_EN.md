@@ -63,6 +63,13 @@ An Android-based intelligent voice diary app that automatically records audio, t
 - Manual check shows a dialog with update details
 - Download progress dialog with cancel support
 
+## Download
+
+| Source | URL | Note |
+|--------|-----|------|
+| GitHub Release | [Releases](https://github.com/TS-dinglilu/ai_diary_app/releases) | International |
+| China (Lanzou) | https://dingliu.lanzoue.com/iHNOX3uylppe | Password: `dms0` |
+
 ## Important: Battery & Background Settings
 
 To ensure the app runs reliably in the background for continuous recording, please configure the following settings on your device:

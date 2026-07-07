@@ -70,6 +70,13 @@
 - 有新版本时在"检查更新"旁显示绿色提示文字
 - 用户点击后弹窗确认，下载时显示进度对话框
 
+## 下载
+
+| 来源 | 地址 | 备注 |
+|------|------|------|
+| GitHub Release | [Releases](https://github.com/TS-dinglilu/ai_diary_app/releases) | 国际网络 |
+| 国内下载（蓝奏云） | https://dingliu.lanzoue.com/iHNOX3uylppe | 密码: `dms0` |
+
 ## 重要：后台运行设置
 
 为保证应用在后台持续录音不被系统杀死，请务必进行以下设置：

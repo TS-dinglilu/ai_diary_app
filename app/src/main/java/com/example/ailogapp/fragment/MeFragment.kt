@@ -131,7 +131,7 @@ class MeFragment : Fragment() {
         val ctx = requireContext()
         Toast.makeText(ctx, getString(R.string.msg_checking_update), Toast.LENGTH_SHORT).show()
         viewLifecycleOwner.lifecycleScope.launch {
-            UpdateChecker.checkForUpdate(ctx, autoDownload = false).collect { state ->
+            UpdateChecker.checkForUpdate(ctx).collect { state ->
                 when (state) {
                     is UpdateChecker.UpdateState.UpdateAvailable -> {
                         com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
@@ -139,7 +139,7 @@ class MeFragment : Fragment() {
                             .setMessage(state.description)
                             .setNegativeButton(getString(R.string.btn_update_later), null)
                             .setPositiveButton(getString(R.string.btn_update_download)) { _, _ ->
-                                downloadAndInstallUpdate()
+                                downloadAndInstallUpdate(state.apkUrl)
                             }
                             .show()
                     }
@@ -155,11 +155,15 @@ class MeFragment : Fragment() {
         }
     }
 
-    /** 下载 APK 并触发安装（checkForUpdate 内部会在发现更新后自动下载） */
-    private fun downloadAndInstallUpdate() {
+    /** 下载 APK 并触发安装（用户点击"下载更新"后调用） */
+    private fun downloadAndInstallUpdate(apkUrl: String) {
         val ctx = requireContext()
+        if (apkUrl.isBlank()) {
+            Toast.makeText(ctx, "未找到 APK 下载链接，请前往 GitHub 手动下载", Toast.LENGTH_LONG).show()
+            return
+        }
         viewLifecycleOwner.lifecycleScope.launch {
-            UpdateChecker.checkForUpdate(ctx, autoDownload = true).collect { state ->
+            UpdateChecker.downloadApk(ctx, apkUrl).collect { state ->
                 when (state) {
                     is UpdateChecker.UpdateState.Downloading -> {
                         _binding?.tvVersion?.let { it.text = getString(R.string.msg_downloading_update, state.progress) }

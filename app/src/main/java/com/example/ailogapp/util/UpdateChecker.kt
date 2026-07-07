@@ -5,7 +5,6 @@ import android.content.Intent
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import okhttp3.OkHttpClient
@@ -54,12 +53,13 @@ object UpdateChecker {
     }
 
     /**
-     * 检查 GitHub 最新 Release，发现新版本后自动下载 APK。
+     * 检查 GitHub 最新 Release，对比版本号判断是否需要更新。
+     *
+     * 仅检查版本，不自动下载。用户确认后才调用 [downloadApk] 下载。
      *
      * @param context 应用上下文
-     * @param autoDownload 发现新版本后是否自动下载 APK，默认 true
      */
-    fun checkForUpdate(context: Context, autoDownload: Boolean = true): Flow<UpdateState> = flow {
+    fun checkForUpdate(context: Context): Flow<UpdateState> = flow {
         emit(UpdateState.Checking)
 
         try {
@@ -133,18 +133,7 @@ object UpdateChecker {
 
             val description = json.optString("body", "").trim().ifBlank { "暂无更新说明" }
 
-            emit(UpdateState.UpdateAvailable(latestVersion, description))
-
-            if (!autoDownload) return@flow
-
-            val url = apkUrl
-            if (url.isNullOrBlank()) {
-                emit(UpdateState.Error("未找到 APK 下载链接，请前往 GitHub 手动下载"))
-                return@flow
-            }
-
-            // 下载 APK，转发其进度状态
-            emitAll(downloadApk(context, url))
+            emit(UpdateState.UpdateAvailable(latestVersion, description, apkUrl ?: ""))
         } catch (e: Exception) {
             LogUtils.w(context, TAG, "检查更新异常: ${e.message}", e)
             emit(UpdateState.Error(e.message ?: "检查更新失败"))
@@ -153,8 +142,13 @@ object UpdateChecker {
 
     /**
      * 下载 APK 到 context.getExternalFilesDir(null)/update.apk。
+     *
+     * 在用户确认更新后调用，不主动触发。
+     *
+     * @param context 应用上下文
+     * @param apkUrl APK 下载地址（来自 [UpdateState.UpdateAvailable.apkUrl]）
      */
-    private fun downloadApk(context: Context, apkUrl: String): Flow<UpdateState> = flow {
+    fun downloadApk(context: Context, apkUrl: String): Flow<UpdateState> = flow {
         val targetFile = File(context.getExternalFilesDir(null), APK_FILE_NAME)
         if (targetFile.parentFile?.exists() != true) {
             targetFile.parentFile?.mkdirs()
@@ -280,8 +274,8 @@ object UpdateChecker {
         /** 正在检查更新 */
         object Checking : UpdateState()
 
-        /** 发现新版本 */
-        data class UpdateAvailable(val version: String, val description: String) : UpdateState()
+        /** 发现新版本，apkUrl 为 GitHub Release 中的 APK 下载链接 */
+        data class UpdateAvailable(val version: String, val description: String, val apkUrl: String) : UpdateState()
 
         /** 已是最新版本 */
         object NoUpdate : UpdateState()

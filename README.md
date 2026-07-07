@@ -124,14 +124,16 @@ ai_diary_app/
 
 ### 模型文件
 
-两个模型均已打包在 APK 中，无需额外下载：
+模型不打包在 APK 中，首次使用时通过在线下载，减小安装包体积：
 
-| 模型 | 用途 | 打包位置 | 大小 |
+| 模型 | 用途 | 下载位置 | 大小 |
 |------|------|---------|------|
-| sense-voice.onnx | 语音转文字 | `app/src/main/assets/sherpa/` | ~937MB |
-| gemma-2b-it.bin | 本地离线 AI 分析 | `app/src/main/assets/llm/` | ~1.8GB |
+| sense-voice.onnx | 语音转文字 | [ModelScope](https://www.modelscope.cn/models/dingliu/ai_diary_app) | ~937MB |
+| gemma-2b-it.bin | 本地离线 AI 分析 | [ModelScope](https://www.modelscope.cn/models/dingliu/ai_diary_app) | ~1.8GB |
 
-> 注意：LLM 模型在首次使用本地离线分析时，会从 APK 内自动复制到应用私有目录（filesDir），需要约 1.8GB 存储空间。
+> 下载地址：https://www.modelscope.cn/models/dingliu/ai_diary_app
+>
+> 在设置界面填写模型下载链接后，App 会自动下载并安装模型到应用私有目录（filesDir）。两个模型合计需要约 2.7GB 存储空间。
 
 ## 配置说明
 

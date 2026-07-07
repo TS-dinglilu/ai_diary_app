@@ -2,7 +2,7 @@
 
 一款基于 Android 的智能语音日记应用，自动录音、语音转文字、AI 情绪分析与日记生成，支持本地离线模型。
 
-> **项目主页**: <https://github.com/TS-dinglilu/ai_diary_app>
+> **[English](README_EN.md)** | **项目主页**: <https://github.com/TS-dinglilu/ai_diary_app>
 
 ## 应用截图
 
@@ -66,8 +66,23 @@
 - 深色模式配色专门优化，对比度高、层次分明
 
 ### GitHub 自动更新
-- 检查 GitHub Releases 最新版本
-- 下载 APK 并触发安装
+- 后台静默检查 GitHub Releases 最新版本
+- 有新版本时在"检查更新"旁显示绿色提示文字
+- 用户点击后弹窗确认，下载时显示进度对话框
+
+## 重要：后台运行设置
+
+为保证应用在后台持续录音不被系统杀死，请务必进行以下设置：
+
+1. **开启自启动**：允许应用开机自启动，设备重启后可自动恢复录音
+2. **省电策略：无限制**：将电池优化设为"无限制"（或"不限制"），防止系统杀掉后台录音服务
+3. **锁定应用**：在最近任务列表中锁定本应用，防止被一键清理
+
+> 以上设置在国产 ROM（MIUI、EMUI、ColorOS、OriginOS 等）上尤为重要，这些系统的后台管理较为激进。
+
+## 测试设备
+
+本应用在**小米 15** 上测试通过。如果在其他设备上遇到 bug 或兼容性问题，欢迎在 [Issues](https://github.com/TS-dinglilu/ai_diary_app/issues) 中反馈。
 
 ## 技术栈
 
@@ -90,10 +105,10 @@ ai_diary_app/
 ├── app/
 │   └── src/main/
 │       ├── assets/
-│       │   ├── sherpa/          # 语音转文字模型（编译进 APK）
+│       │   ├── sherpa/          # 语音转文字模型（运行时在线下载）
 │       │   │   ├── sense-voice.onnx
 │       │   │   └── tokens.txt
-│       │   └── llm/             # 本地离线 AI 分析模型（编译进 APK）
+│       │   └── llm/             # 本地离线 AI 分析模型（运行时在线下载）
 │       │       └── gemma-2b-it.bin
 │       └── java/com/example/ailogapp/
 │           ├── ai/              # AI 分析与 LLM 推理

@@ -79,7 +79,7 @@
 | 来源 | 地址 | 备注 |
 |------|------|------|
 | GitHub Release | [Releases](https://github.com/TS-dinglilu/ai_diary_app/releases) | 国际网络 |
-| 国内下载（蓝奏云） | https://dingliu.lanzoue.com/iHNOX3uylppe | 密码: `dms0` |
+| 国内下载（夸克网盘） | https://pan.quark.cn/s/559ce2bc5b5b?pwd=yx2N | 提取码: `yx2N` |
 
 ## 重要：后台运行设置
 

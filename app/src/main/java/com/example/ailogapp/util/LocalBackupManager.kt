@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.flowOn
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -214,9 +213,35 @@ object LocalBackupManager {
 
         val app = context.applicationContext as com.example.ailogapp.App
 
+        // 数据库相关文件路径（提前声明，便于在 catch 块中回滚）
+        val dbFile = context.getDatabasePath(DB_FILE_NAME)
+        val dbParent = dbFile.parentFile
+        if (dbParent == null) {
+            emit(RestoreState.Error("无法获取数据库目录"))
+            return@flow
+        }
+        val existingWal = File(dbParent, "$DB_FILE_NAME-wal")
+        val existingShm = File(dbParent, "$DB_FILE_NAME-shm")
+
+        // 临时备份目录，用于在恢复失败时回滚数据库文件
+        val backupDir = File(context.cacheDir, "restore_backup").apply {
+            if (exists()) deleteRecursively()
+            mkdirs()
+        }
+        var dbClosed = false
+        var originalsDeleted = false
+
         try {
             // 先打开 ZIP 校验有效性，避免对无效文件关闭数据库
             val zip = ZipFile(zipFile)
+
+            // 关闭数据库前，先将现有数据库文件复制到临时备份目录，便于恢复失败时回滚
+            for (f in listOf(dbFile, existingWal, existingShm)) {
+                if (f.exists()) {
+                    f.copyTo(File(backupDir, f.name), overwrite = true)
+                }
+            }
+            LogUtils.i(context, TAG, "已备份现有数据库文件到临时目录: ${backupDir.absolutePath}")
 
             // 关闭数据库连接，确保可以安全覆盖数据库文件
             try {
@@ -225,20 +250,17 @@ object LocalBackupManager {
             } catch (e: Exception) {
                 LogUtils.w(context, TAG, "关闭数据库异常（继续恢复）: ${e.message}")
             }
+            dbClosed = true
 
             // 准备目录
-            val dbFile = context.getDatabasePath(DB_FILE_NAME)
-            val dbParent = dbFile.parentFile
-                ?: throw IOException("无法获取数据库目录")
             if (!dbParent.exists()) dbParent.mkdirs()
             val transcriptsDir = File(context.filesDir, DIR_TRANSCRIPTS).apply { if (!exists()) mkdirs() }
 
             // 删除现有数据库文件，确保恢复后无残留的旧 WAL/SHM 造成数据不一致
-            val existingWal = File(dbParent, "$DB_FILE_NAME-wal")
-            val existingShm = File(dbParent, "$DB_FILE_NAME-shm")
             dbFile.delete()
             existingWal.delete()
             existingShm.delete()
+            originalsDeleted = true
 
             var restoredDb = 0
             var restoredTxt = 0
@@ -303,6 +325,10 @@ object LocalBackupManager {
                 }
             }
 
+            // 解压成功，删除临时备份目录
+            backupDir.deleteRecursively()
+            LogUtils.i(context, TAG, "恢复成功，已删除临时备份目录")
+
             // 重新打开数据库（访问 openHelper.writableDatabase 会触发重新连接）
             try {
                 app.database.openHelper.writableDatabase
@@ -320,6 +346,32 @@ object LocalBackupManager {
             emit(RestoreState.Success(summary))
         } catch (e: Exception) {
             LogUtils.e(context, TAG, "恢复失败: ${e.message}", e)
+            // 若原数据库文件已被删除，从临时备份目录恢复原文件
+            if (originalsDeleted) {
+                try {
+                    dbFile.delete()
+                    existingWal.delete()
+                    existingShm.delete()
+                    val backupFiles = backupDir.listFiles() ?: emptyArray()
+                    for (bf in backupFiles) {
+                        bf.copyTo(File(dbParent, bf.name), overwrite = true)
+                    }
+                    LogUtils.i(context, TAG, "已从临时备份目录恢复原数据库文件")
+                } catch (re: Exception) {
+                    LogUtils.e(context, TAG, "回滚数据库文件失败: ${re.message}", re)
+                }
+            }
+            // 确保数据库回到可用状态：若已关闭则重新打开
+            if (dbClosed) {
+                try {
+                    app.database.openHelper.writableDatabase
+                    LogUtils.i(context, TAG, "回滚后数据库已重新打开")
+                } catch (re: Exception) {
+                    LogUtils.w(context, TAG, "回滚后重新打开数据库异常: ${re.message}")
+                }
+            }
+            // 清理临时备份目录
+            backupDir.deleteRecursively()
             emit(RestoreState.Error(e.message ?: "恢复失败"))
         }
     }.flowOn(Dispatchers.IO)

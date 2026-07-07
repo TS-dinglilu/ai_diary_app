@@ -251,7 +251,6 @@
     <string name="msg_already_latest">已是最新版本</string>
     <string name="btn_cancel">取消</string>
     <string name="msg_downloading">正在下载</string>
-    <string name="msg_downloading_update">下载中 %1$d%%</string>
     <string name="msg_avatar_failed">设置头像失败</string>
     <string name="msg_avatar_unreadable">无法读取图片</string>
     <string name="msg_triggered_transcribe">已触发转写</string>

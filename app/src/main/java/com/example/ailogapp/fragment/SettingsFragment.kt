@@ -84,17 +84,23 @@ class SettingsFragment : Fragment() {
         ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
-            try {
-                // 将 ZIP 从 SAF 复制到 cacheDir 再恢复
-                val ctx = requireContext()
-                val tempZip = java.io.File(ctx.cacheDir, "restore_temp.zip")
-                ctx.contentResolver.openInputStream(uri)?.use { input ->
-                    tempZip.outputStream().use { input.copyTo(it) }
+            val ctx = requireContext()
+            val tempZip = java.io.File(ctx.cacheDir, "restore_temp.zip")
+            viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                try {
+                    // 在 IO 线程将 ZIP 从 SAF 复制到 cacheDir
+                    ctx.contentResolver.openInputStream(uri)?.use { input ->
+                        tempZip.outputStream().use { input.copyTo(it) }
+                    }
+                    withContext(Dispatchers.Main) { doLocalRestore(tempZip) }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        showTaskStatus("无法读取所选文件: ${e.message}")
+                    }
+                } finally {
+                    // 恢复完成后清理临时文件（doLocalRestore 是异步的，延迟删除）
+                    tempZip.delete()
                 }
-                doLocalRestore(tempZip)
-                tempZip.deleteOnExit()
-            } catch (e: Exception) {
-                showTaskStatus("无法读取所选文件: ${e.message}")
             }
         }
     }
@@ -319,11 +325,14 @@ class SettingsFragment : Fragment() {
         restoreFileLauncher.launch(arrayOf("application/zip", "application/octet-stream"))
     }
 
-    /** 保存 WebDAV 配置到 PrefsManager */
+    /** 保存 WebDAV 配置到 PrefsManager（空值不覆盖已有配置） */
     private fun saveWebdavConfig() {
-        prefs.webdavUrl = binding.etWebdavUrl.text?.toString()?.trim() ?: ""
-        prefs.webdavEmail = binding.etWebdavEmail.text?.toString()?.trim() ?: ""
-        prefs.webdavPassword = binding.etWebdavPassword.text?.toString()?.trim() ?: ""
+        val url = binding.etWebdavUrl.text?.toString()?.trim() ?: ""
+        val email = binding.etWebdavEmail.text?.toString()?.trim() ?: ""
+        val password = binding.etWebdavPassword.text?.toString()?.trim() ?: ""
+        if (url.isNotBlank()) prefs.webdavUrl = url
+        if (email.isNotBlank()) prefs.webdavEmail = email
+        if (password.isNotBlank()) prefs.webdavPassword = password
     }
 
     /** 执行本地备份到 SAF 目录 */
@@ -345,12 +354,7 @@ class SettingsFragment : Fragment() {
                             try {
                                 val zipFile = zipFiles.first()
                                 val fileName = zipFile.name
-                                // 用 ContentResolver 在 SAF 目录下创建文件
-                                val values = android.content.ContentValues().apply {
-                                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/zip")
-                                }
-                                // 直接用 SAF 的 createDocument 替代 DocumentFile
+                                // 用 SAF 的 createDocument 在所选目录下创建文件
                                 val targetUri = android.provider.DocumentsContract.createDocument(
                                     ctx.contentResolver, folderUri, "application/zip", fileName
                                 )
@@ -361,10 +365,10 @@ class SettingsFragment : Fragment() {
                                     setBackupStatus(getString(R.string.backup_success, "已保存: $fileName"))
                                     showTaskStatus(getString(R.string.backup_success, fileName))
                                 } else {
-                                    // 回退：复制到 externalFilesDir
+                                    // 回退：复制到应用外部目录
                                     val fallback = java.io.File(ctx.getExternalFilesDir(null), fileName)
                                     zipFile.copyTo(fallback, overwrite = true)
-                                    setBackupStatus(getString(R.string.backup_success, "已保存到 Download 目录: $fileName"))
+                                    setBackupStatus(getString(R.string.backup_success, "已保存到应用目录: $fileName"))
                                     showTaskStatus(getString(R.string.backup_success, fileName))
                                 }
                             } catch (e: Exception) {

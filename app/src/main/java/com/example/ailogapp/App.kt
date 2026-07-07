@@ -24,8 +24,8 @@ class App : Application() {
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
     val prefs: PrefsManager by lazy { PrefsManager(this) }
 
-    /** 应用级协程 scope，随进程生命周期存在 */
-    private val appScope = CoroutineScope(Dispatchers.IO)
+    /** 应用级协程 scope，随进程生命周期存在（SupervisorJob 确保子协程异常不互相影响） */
+    private val appScope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
@@ -51,20 +51,21 @@ class App : Application() {
         if (!prefs.autoBackupOnAppStart) return
         // WebDAV 凭据未配置则跳过
         if (prefs.webdavEmail.isBlank() || prefs.webdavPassword.isBlank()) return
-        // 避免短时间内重复备份（距上次备份不足 10 分钟则跳过）
+        // 节流：距上次备份尝试不足 30 分钟则跳过（无论成功失败，避免频繁重试）
         val now = System.currentTimeMillis()
-        if (now - prefs.lastAutoBackupTime < 10 * 60 * 1000L) {
-            LogUtils.i(this, "App", "距上次自动备份不足 10 分钟，跳过启动备份")
+        if (now - prefs.lastAutoBackupTime < 30 * 60 * 1000L) {
+            LogUtils.i(this, "App", "距上次备份尝试不足 30 分钟，跳过启动备份")
             return
         }
 
         appScope.launch {
             LogUtils.i(this@App, "App", "启动自动备份到坚果云…")
+            // 先记录尝试时间，避免失败后每次启动都重试
+            prefs.lastAutoBackupTime = now
             try {
                 WebDavBackupManager.backup(this@App).collect { state ->
                     when (state) {
                         is WebDavBackupManager.BackupState.Success -> {
-                            prefs.lastAutoBackupTime = System.currentTimeMillis()
                             LogUtils.i(this@App, "App", "启动自动备份完成: ${state.summary}")
                         }
                         is WebDavBackupManager.BackupState.Error -> {

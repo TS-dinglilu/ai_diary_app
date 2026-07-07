@@ -14,6 +14,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
@@ -193,6 +194,20 @@ object WebDavBackupManager {
         LogUtils.i(context, TAG, "开始从云端恢复")
         emit(RestoreState.Restoring(0))
 
+        val app = context.applicationContext as com.example.ailogapp.App
+        val dbFile = context.getDatabasePath(DB_FILE_NAME)
+        val dbParent = dbFile.parentFile
+        if (dbParent == null) {
+            emit(RestoreState.Error("无法获取数据库目录"))
+            return@flow
+        }
+        // 临时数据库备份目录，用于在替换失败时回滚数据库文件
+        val dbBackupDir = File(context.cacheDir, "restore_db_backup").apply {
+            if (exists()) deleteRecursively()
+            mkdirs()
+        }
+        var dbClosed = false
+
         try {
             // 1. 下载文件到临时目录
             val tempDir = File(context.cacheDir, "restore_temp").apply { mkdirs() }
@@ -223,16 +238,29 @@ object WebDavBackupManager {
             done++
             emit(RestoreState.Restoring((done * 100 / totalSteps).coerceIn(0, 100)))
 
-            // 3. 关闭数据库，替换文件
-            val app = context.applicationContext as com.example.ailogapp.App
-            app.database.close()
+            // 3. 关闭数据库前，先将现有数据库文件备份到临时目录，便于替换失败时回滚
+            for (fileName in dbFiles) {
+                if (fileName == PREFS_FILE_NAME) continue
+                val src = File(dbParent, fileName)
+                if (src.exists()) {
+                    src.copyTo(File(dbBackupDir, fileName), overwrite = true)
+                }
+            }
+            LogUtils.i(context, TAG, "已备份现有数据库文件到临时目录: ${dbBackupDir.absolutePath}")
 
-            val dbFile = context.getDatabasePath(DB_FILE_NAME)
+            // 关闭数据库，替换文件
+            try {
+                app.database.close()
+            } catch (e: Exception) {
+                LogUtils.w(context, TAG, "关闭数据库异常（继续恢复）: ${e.message}")
+            }
+            dbClosed = true
+
             // 替换数据库文件
             for (fileName in dbFiles) {
                 if (fileName == PREFS_FILE_NAME) continue
                 val tempFile = File(tempDir, fileName)
-                val targetFile = File(dbFile.parentFile, fileName)
+                val targetFile = File(dbParent, fileName)
                 if (tempFile.exists() && tempFile.length() > 0) {
                     targetFile.parentFile?.mkdirs()
                     tempFile.copyTo(targetFile, overwrite = true)
@@ -250,7 +278,8 @@ object WebDavBackupManager {
             // 5. 重新打开数据库
             app.database.openHelper.writableDatabase
 
-            // 清理临时目录
+            // 替换成功，清理临时目录与数据库备份目录
+            dbBackupDir.deleteRecursively()
             tempDir.deleteRecursively()
 
             val summary = "恢复完成：共恢复 $restoredCount 个文件"
@@ -258,6 +287,29 @@ object WebDavBackupManager {
             emit(RestoreState.Success(summary))
         } catch (e: Exception) {
             LogUtils.e(context, TAG, "恢复失败: ${e.message}", e)
+            // 若数据库已关闭且替换可能失败，从临时备份恢复原数据库文件
+            if (dbClosed) {
+                try {
+                    // 删除可能已部分写入的数据库文件
+                    for (fileName in dbFiles) {
+                        if (fileName == PREFS_FILE_NAME) continue
+                        File(dbParent, fileName).delete()
+                    }
+                    // 从临时备份目录恢复原文件
+                    val backupFiles = dbBackupDir.listFiles() ?: emptyArray()
+                    for (bf in backupFiles) {
+                        bf.copyTo(File(dbParent, bf.name), overwrite = true)
+                    }
+                    LogUtils.i(context, TAG, "已从临时备份目录恢复原数据库文件")
+                    // 重新打开数据库
+                    app.database.openHelper.writableDatabase
+                    LogUtils.i(context, TAG, "回滚后数据库已重新打开")
+                } catch (re: Exception) {
+                    LogUtils.e(context, TAG, "回滚数据库文件失败: ${re.message}", re)
+                }
+            }
+            // 清理临时数据库备份目录
+            dbBackupDir.deleteRecursively()
             emit(RestoreState.Error(e.message ?: "恢复失败"))
         }
     }.flowOn(Dispatchers.IO)
@@ -299,8 +351,9 @@ object WebDavBackupManager {
     private fun restorePrefsFromJson(context: Context, jsonFile: File) {
         val sp = context.getSharedPreferences("ailog_prefs", android.content.Context.MODE_PRIVATE)
         val json = JSONObject(jsonFile.readText())
-        sp.edit().clear().apply()
-        val editor = sp.edit()
+        // 合并 clear 与逐项 put 到同一个 editor，并使用 commit() 同步写入，
+        // 确保恢复后立即读取 prefs 能拿到新值
+        val editor = sp.edit().clear()
         for (key in json.keys()) {
             val entry = json.getJSONObject(key)
             val type = entry.getString("type")
@@ -317,7 +370,7 @@ object WebDavBackupManager {
                 }
             }
         }
-        editor.apply()
+        editor.commit()
         LogUtils.i(context, TAG, "设置已从 JSON 恢复")
     }
 
@@ -418,8 +471,12 @@ object WebDavBackupManager {
                 // 提取 href 中的文件名
                 val hrefs = Regex("""<[^>]*href[^>]*>([^<]+)<""", RegexOption.IGNORE_CASE)
                     .findAll(xml).map { it.groupValues[1] }.toList()
-                // 过滤掉目录本身，只保留文件
-                hrefs.map { it.substringAfterLast("/").substringAfterLast("%2F") }
+                // 过滤掉目录本身，只保留文件；对 URL 编码的文件名解码，
+                // 避免后续 buildUrl 再次编码导致双重编码（服务器返回 404）
+                hrefs.map { href ->
+                    val name = href.substringAfterLast("/").substringAfterLast("%2F")
+                    URLDecoder.decode(name, "UTF-8")
+                }
                     .filter { it.isNotBlank() && !it.endsWith("/") }
                     .distinct()
             }

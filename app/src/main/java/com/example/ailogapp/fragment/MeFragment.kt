@@ -27,7 +27,9 @@ import com.example.ailogapp.SettingsActivity
 import com.example.ailogapp.databinding.FragmentMeBinding
 import com.example.ailogapp.dialog.DeleteRecordsDialog
 import com.example.ailogapp.util.UpdateChecker
+import com.example.ailogapp.util.PrefsManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -139,21 +141,34 @@ class MeFragment : Fragment() {
     /** 待下载的 APK 链接（检查到新版本后暂存，用户点击后触发下载） */
     private var pendingApkUrl: String? = null
 
+    /** 当前检查更新的协程 Job，防止并发竞争 */
+    private var checkJob: Job? = null
+
+    /** 当前下载协程 Job，用于取消下载 */
+    private var downloadJob: Job? = null
+
     /** 下载进度对话框 */
     private var downloadDialogInstance: android.app.Dialog? = null
 
-    /** 后台静默检查更新：有新版本时仅显示绿色"有可用更新"文字 */
+    /** 后台静默检查更新：有新版本时仅显示绿色"有可用更新"文字（24 小时节流） */
     private fun checkForUpdateSilent() {
-        val ctx = requireContext()
-        viewLifecycleOwner.lifecycleScope.launch {
-            UpdateChecker.checkForUpdate(ctx).collect { state ->
+        val prefs = PrefsManager(requireContext())
+        val now = System.currentTimeMillis()
+        // 24 小时内不重复静默检查
+        if (now - prefs.lastUpdateCheckTime < 24 * 60 * 60 * 1000L) return
+
+        checkJob?.cancel()
+        checkJob = viewLifecycleOwner.lifecycleScope.launch {
+            UpdateChecker.checkForUpdate(requireContext()).collect { state ->
                 when (state) {
                     is UpdateChecker.UpdateState.UpdateAvailable -> {
                         pendingApkUrl = state.apkUrl
+                        prefs.lastUpdateCheckTime = now
                         _binding?.tvUpdateHint?.visibility = View.VISIBLE
                     }
                     is UpdateChecker.UpdateState.NoUpdate -> {
                         pendingApkUrl = null
+                        prefs.lastUpdateCheckTime = now
                         _binding?.tvUpdateHint?.visibility = View.GONE
                     }
                     else -> {}
@@ -167,7 +182,8 @@ class MeFragment : Fragment() {
         val ctx = requireContext()
         binding.tvUpdateHint.visibility = View.GONE
         Toast.makeText(ctx, getString(R.string.msg_checking_update), Toast.LENGTH_SHORT).show()
-        viewLifecycleOwner.lifecycleScope.launch {
+        checkJob?.cancel()
+        checkJob = viewLifecycleOwner.lifecycleScope.launch {
             UpdateChecker.checkForUpdate(ctx).collect { state ->
                 when (state) {
                     is UpdateChecker.UpdateState.UpdateAvailable -> {
@@ -177,9 +193,7 @@ class MeFragment : Fragment() {
                         com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
                             .setTitle(getString(R.string.msg_update_available, state.version))
                             .setMessage(state.description)
-                            .setNegativeButton(getString(R.string.btn_update_later)) { _, _ ->
-                                pendingApkUrl = state.apkUrl
-                            }
+                            .setNegativeButton(getString(R.string.btn_update_later), null)
                             .setPositiveButton(getString(R.string.btn_update_download)) { _, _ ->
                                 downloadAndInstallUpdate(state.apkUrl)
                             }
@@ -199,13 +213,16 @@ class MeFragment : Fragment() {
         }
     }
 
-    /** 下载 APK 并触发安装，显示下载进度弹窗 */
+    /** 下载 APK 并触发安装，显示下载进度弹窗，可取消 */
     private fun downloadAndInstallUpdate(apkUrl: String) {
         val ctx = requireContext()
         if (apkUrl.isBlank()) {
             Toast.makeText(ctx, "未找到 APK 下载链接，请前往 GitHub 手动下载", Toast.LENGTH_LONG).show()
             return
         }
+
+        // 取消已有的下载
+        downloadJob?.cancel()
 
         // 创建下载进度弹窗
         val progressBar = android.widget.ProgressBar(ctx, null, android.R.attr.progressBarStyleHorizontal).apply {
@@ -220,31 +237,36 @@ class MeFragment : Fragment() {
             .setView(progressBar)
             .setCancelable(false)
             .setNegativeButton(R.string.btn_cancel) { _, _ ->
-                // 取消下载：关闭弹窗，保留 pendingApkUrl 供再次点击
+                downloadJob?.cancel()
             }
             .create()
         dialog.show()
         downloadDialogInstance = dialog
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            UpdateChecker.downloadApk(ctx, apkUrl).collect { state ->
-                when (state) {
-                    is UpdateChecker.UpdateState.Downloading -> {
-                        progressBar.progress = state.progress
-                        dialog.setTitle("${getString(R.string.msg_downloading)} ${state.progress}%")
+        downloadJob = viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                UpdateChecker.downloadApk(ctx, apkUrl).collect { state ->
+                    when (state) {
+                        is UpdateChecker.UpdateState.Downloading -> {
+                            progressBar.progress = state.progress
+                            dialog.setTitle("${getString(R.string.msg_downloading)} ${state.progress}%")
+                        }
+                        is UpdateChecker.UpdateState.Downloaded -> {
+                            dialog.dismiss()
+                            downloadDialogInstance = null
+                            UpdateChecker.installApk(ctx, state.apkPath)
+                        }
+                        is UpdateChecker.UpdateState.Error -> {
+                            dialog.dismiss()
+                            downloadDialogInstance = null
+                            Toast.makeText(ctx, state.message, Toast.LENGTH_LONG).show()
+                        }
+                        else -> {}
                     }
-                    is UpdateChecker.UpdateState.Downloaded -> {
-                        dialog.dismiss()
-                        downloadDialogInstance = null
-                        UpdateChecker.installApk(ctx, state.apkPath)
-                    }
-                    is UpdateChecker.UpdateState.Error -> {
-                        dialog.dismiss()
-                        downloadDialogInstance = null
-                        Toast.makeText(ctx, state.message, Toast.LENGTH_LONG).show()
-                    }
-                    else -> {}
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                dialog.dismiss()
+                downloadDialogInstance = null
             }
         }
     }
@@ -355,6 +377,8 @@ class MeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        checkJob?.cancel()
+        downloadJob?.cancel()
         downloadDialogInstance?.dismiss()
         downloadDialogInstance = null
         super.onDestroyView()

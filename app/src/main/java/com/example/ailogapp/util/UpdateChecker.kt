@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -181,6 +183,7 @@ object UpdateChecker {
                     var lastProgress = -1
 
                     while (true) {
+                        currentCoroutineContext().ensureActive()
                         bytesRead = input.read(buffer)
                         if (bytesRead <= 0) break
                         output.write(buffer, 0, bytesRead)
@@ -207,6 +210,11 @@ object UpdateChecker {
             } else {
                 emit(UpdateState.Error("下载文件不完整"))
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            // 用户取消下载，清理不完整的文件
+            LogUtils.i(context, TAG, "APK 下载已取消")
+            if (targetFile.exists()) targetFile.delete()
+            throw e
         } catch (e: Exception) {
             LogUtils.w(context, TAG, "APK 下载异常: ${e.message}", e)
             emit(UpdateState.Error(e.message ?: "下载失败"))

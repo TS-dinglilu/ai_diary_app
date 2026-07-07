@@ -208,6 +208,11 @@ class PrefsManager(context: Context) {
         get() = sp.getLong(KEY_LAST_AUTO_BACKUP_TIME, 0L)
         set(value) = sp.edit { putLong(KEY_LAST_AUTO_BACKUP_TIME, value) }
 
+    /** 上次检查更新的时间戳（毫秒），24 小时节流静默检查 */
+    var lastUpdateCheckTime: Long
+        get() = sp.getLong(KEY_LAST_UPDATE_CHECK_TIME, 0L)
+        set(value) = sp.edit { putLong(KEY_LAST_UPDATE_CHECK_TIME, value) }
+
     companion object {
         private const val KEY_AI_URL = "ai_api_url"
         private const val KEY_AI_KEY = "ai_api_key"
@@ -240,6 +245,7 @@ class PrefsManager(context: Context) {
         private const val KEY_WEBDAV_AUTO_BACKUP = "webdav_auto_backup"
         private const val KEY_AUTO_BACKUP_ON_START = "auto_backup_on_start"
         private const val KEY_LAST_AUTO_BACKUP_TIME = "last_auto_backup_time"
+        private const val KEY_LAST_UPDATE_CHECK_TIME = "last_update_check_time"
 
         /** ModelScope 直链默认值 */
         const val DEFAULT_ASR_MODEL_URL =

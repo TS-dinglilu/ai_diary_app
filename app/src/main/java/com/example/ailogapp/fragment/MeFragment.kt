@@ -98,8 +98,15 @@ class MeFragment : Fragment() {
             startActivity(intent)
         }
 
-        // 检查更新
-        binding.layoutUpdate.setOnClickListener { checkForUpdate() }
+        // 检查更新：若已有新版本待下载，则直接下载；否则发起检查
+        binding.layoutUpdate.setOnClickListener {
+            val url = pendingApkUrl
+            if (!url.isNullOrBlank()) {
+                downloadAndInstallUpdate(url)
+            } else {
+                checkForUpdate()
+            }
+        }
 
         // 项目主页
         binding.layoutGithub.setOnClickListener {
@@ -126,24 +133,25 @@ class MeFragment : Fragment() {
         }
     }
 
-    /** 检查 GitHub 最新版本并提示更新 */
+    /** 待下载的 APK 链接（检查到新版本后暂存，用户点击后触发下载） */
+    private var pendingApkUrl: String? = null
+
+    /** 检查 GitHub 最新版本，有新版本时在"检查更新"旁显示提示 */
     private fun checkForUpdate() {
         val ctx = requireContext()
+        binding.tvUpdateHint.visibility = View.GONE
         Toast.makeText(ctx, getString(R.string.msg_checking_update), Toast.LENGTH_SHORT).show()
         viewLifecycleOwner.lifecycleScope.launch {
             UpdateChecker.checkForUpdate(ctx).collect { state ->
                 when (state) {
                     is UpdateChecker.UpdateState.UpdateAvailable -> {
-                        com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
-                            .setTitle(getString(R.string.msg_update_available, state.version))
-                            .setMessage(state.description)
-                            .setNegativeButton(getString(R.string.btn_update_later), null)
-                            .setPositiveButton(getString(R.string.btn_update_download)) { _, _ ->
-                                downloadAndInstallUpdate(state.apkUrl)
-                            }
-                            .show()
+                        pendingApkUrl = state.apkUrl
+                        binding.tvUpdateHint.visibility = View.VISIBLE
+                        Toast.makeText(ctx, getString(R.string.msg_update_available, state.version), Toast.LENGTH_SHORT).show()
                     }
                     is UpdateChecker.UpdateState.NoUpdate -> {
+                        pendingApkUrl = null
+                        binding.tvUpdateHint.visibility = View.GONE
                         Toast.makeText(ctx, getString(R.string.msg_already_latest), Toast.LENGTH_SHORT).show()
                     }
                     is UpdateChecker.UpdateState.Error -> {
@@ -155,7 +163,7 @@ class MeFragment : Fragment() {
         }
     }
 
-    /** 下载 APK 并触发安装（用户点击"下载更新"后调用） */
+    /** 下载 APK 并触发安装（用户点击"检查更新"且已有新版本时触发） */
     private fun downloadAndInstallUpdate(apkUrl: String) {
         val ctx = requireContext()
         if (apkUrl.isBlank()) {
@@ -166,14 +174,20 @@ class MeFragment : Fragment() {
             UpdateChecker.downloadApk(ctx, apkUrl).collect { state ->
                 when (state) {
                     is UpdateChecker.UpdateState.Downloading -> {
-                        _binding?.tvVersion?.let { it.text = getString(R.string.msg_downloading_update, state.progress) }
+                        _binding?.tvVersion?.let { it.text = "${state.progress}%" }
                     }
                     is UpdateChecker.UpdateState.Downloaded -> {
-                        _binding?.tvVersion?.let { it.text = "" }
+                        _binding?.tvVersion?.let {
+                            val pkgInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+                            it.text = "v${pkgInfo.versionName}"
+                        }
                         UpdateChecker.installApk(ctx, state.apkPath)
                     }
                     is UpdateChecker.UpdateState.Error -> {
-                        _binding?.tvVersion?.let { it.text = "" }
+                        _binding?.tvVersion?.let {
+                            val pkgInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+                            it.text = "v${pkgInfo.versionName}"
+                        }
                         Toast.makeText(ctx, state.message, Toast.LENGTH_LONG).show()
                     }
                     else -> {}

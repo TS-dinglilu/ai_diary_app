@@ -316,6 +316,16 @@
                 android:textSize="13sp"
                 android:layout_marginEnd="6dp" />
 
+            <TextView
+                android:id="@+id/tvUpdateHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/msg_update_hint"
+                android:textColor="@color/accent_action"
+                android:textSize="12sp"
+                android:layout_marginEnd="6dp"
+                android:visibility="gone" />
+
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"

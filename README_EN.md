@@ -73,6 +73,7 @@ An Android-based intelligent voice diary app that automatically records audio, t
 |--------|-----|------|
 | GitHub Release | [Releases](https://github.com/TS-dinglilu/ai_diary_app/releases) | International |
 | China (Quark Drive) | https://pan.quark.cn/s/559ce2bc5b5b?pwd=yx2N | Password: `yx2N` |
+| China (Lanzou) | https://dingliu.lanzoue.com/iKXX73uz48ij | — |
 
 ## Important: Battery & Background Settings
 

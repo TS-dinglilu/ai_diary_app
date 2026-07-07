@@ -1,0 +1,12 @@
+<resources>
+    <!-- 深色模式主题：状态栏图标改回白色 -->
+    <style name="Theme.AIDiaryApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/wechat_green</item>
+        <item name="colorPrimaryDark">@color/bg_base</item>
+        <item name="colorAccent">@color/wechat_green</item>
+        <item name="android:statusBarColor">@color/bg_surface</item>
+        <item name="android:navigationBarColor">@color/bg_surface</item>
+        <item name="android:windowBackground">@color/bg_base</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

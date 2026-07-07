@@ -1,0 +1,20 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+app/build/
+
+# 大模型文件不纳入 Git（体积过大）
+app/src/main/assets/sherpa/sense-voice.onnx
+app/src/main/assets/llm/gemma-2b-it.bin
+
+# 临时文件和大文件
+*.hprof
+*.tar.bz2
+*.pdf
+

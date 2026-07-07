@@ -1,0 +1,261 @@
+<resources>
+    <string name="app_name">日记</string>
+
+    <!-- 底部导航 -->
+    <string name="tab_chat">聊天</string>
+    <string name="tab_analysis">AI 分析</string>
+    <string name="tab_settings">设置</string>
+    <string name="tab_me">我</string>
+
+    <!-- 聊天列表 -->
+    <string name="chat_list_title">聊天</string>
+    <string name="chat_new">新建对话</string>
+    <string name="chat_empty_list">还没有对话\n点击右上角 + 新建</string>
+
+    <!-- 聊天详情 -->
+    <string name="chat_hint">输入消息…</string>
+    <string name="chat_send">发送</string>
+    <string name="chat_voice">语音</string>
+    <string name="chat_thinking">AI 正在思考…</string>
+    <string name="chat_error">请求失败，请检查接口配置</string>
+    <string name="chat_default_title">AI 助手</string>
+
+    <!-- 录音 -->
+    <string name="notification_channel_recording">持续录音</string>
+    <string name="notification_channel_recording_desc">保持录音服务在前台运行</string>
+    <string name="recording_title">正在录音</string>
+    <string name="recording_text">AI 日记正在后台记录音频</string>
+
+    <!-- 操作 -->
+    <string name="btn_start">开启录音</string>
+    <string name="btn_stop">停止录音</string>
+    <string name="btn_transcribe">语音转文字</string>
+    <string name="btn_analyze">AI 分析</string>
+
+    <!-- 状态 -->
+    <string name="status_stopped">待开始</string>
+    <string name="status_recording">录音中</string>
+
+    <!-- 标签 -->
+    <string name="section_recording">录音</string>
+    <string name="section_actions">处理</string>
+    <string name="section_settings">配置</string>
+    <string name="section_other">其他</string>
+
+    <!-- 我 -->
+    <string name="me_title">日记</string>
+    <string name="me_subtitle">你的保密私人助手</string>
+    <string name="me_settings">设置</string>
+    <string name="me_recording">录音管理</string>
+    <string name="me_delete_records">删除录音</string>
+    <string name="me_about">关于</string>
+    <string name="me_change_avatar">修改头像</string>
+    <string name="me_avatar_changed">头像已更新</string>
+    <string name="me_log">运行日志</string>
+
+    <!-- 日志 -->
+    <string name="log_empty">暂无日志记录</string>
+    <string name="log_info">共 %1$d 个日志文件 · %2$s</string>
+    <string name="log_export">导出日志</string>
+    <string name="log_export_success">日志导出成功</string>
+    <string name="log_export_failed">导出失败</string>
+    <string name="log_export_path">日志已保存到：\n%1$s</string>
+    <string name="log_share">分享</string>
+    <string name="log_open">打开</string>
+    <string name="log_share_title">分享日志</string>
+    <string name="log_clear">清空日志</string>
+    <string name="log_clear_confirm_title">确认清空</string>
+    <string name="log_clear_confirm_msg">确定要清空所有日志吗？此操作不可撤销。</string>
+    <string name="log_cleared">日志已清空</string>
+
+    <!-- AI 分析日志 -->
+    <string name="journal_empty">还没有分析记录\n录音后充电或手动触发即可生成</string>
+    <string name="journal_recording">录音</string>
+    <string name="journal_transcript">转写</string>
+    <string name="journal_analysis">AI 分析</string>
+    <string name="journal_delete_record">删除录音</string>
+    <string name="journal_delete_transcript">删除转写</string>
+    <string name="journal_delete_analysis">删除分析</string>
+    <string name="journal_play_record">播放录音</string>
+    <string name="journal_export_record">导出录音</string>
+    <string name="journal_export_transcript">导出转写</string>
+    <string name="journal_export_analysis">导出分析</string>
+    <string name="journal_import_record">导入录音</string>
+    <string name="journal_deleted">已删除</string>
+    <string name="journal_confirm_delete">确认删除</string>
+    <string name="journal_confirm_delete_record_msg">将删除录音文件、转写记录和相关数据，此操作不可撤销。确定删除吗？</string>
+    <string name="journal_retranscribe">重新转写</string>
+    <string name="journal_retranscribe_confirm">确认重新转写？将删除当前转写结果并重新生成。</string>
+    <string name="journal_retranscribe_all">重新转写所有录音</string>
+    <string name="journal_retranscribe_all_confirm">确认重新转写所有录音？将删除所有转写结果并重新生成，此操作可能需要较长时间。</string>
+    <string name="journal_retranscribe_started">已触发重新转写</string>
+    <string name="journal_continue_transcribe">继续转写</string>
+    <string name="journal_continue_transcribe_confirm">确认继续转写 %1$s 的未转写录音？共 %2$d 条需要转写。</string>
+    <string name="journal_continue_transcribe_started">已触发继续转写</string>
+    <string name="journal_transcribing">正在转写</string>
+    <string name="journal_all_transcribed">全部转写完成</string>
+    <string name="journal_partially_transcribed">%1$d/%2$d 已转写</string>
+
+    <!-- 笔记与详情页 -->
+    <string name="journal_note">笔记</string>
+    <string name="journal_note_hint">在此写笔记…</string>
+    <string name="journal_note_save">保存笔记</string>
+    <string name="journal_note_saved">笔记已保存</string>
+    <string name="journal_note_empty">请输入笔记内容</string>
+    <string name="journal_note_deleted">笔记已删除</string>
+    <string name="journal_note_from_transcript">来自转写</string>
+    <string name="journal_note_from_analysis">来自 AI 分析</string>
+    <string name="detail_transcript">转写内容</string>
+    <string name="detail_analysis">AI 分析</string>
+    <string name="detail_summary">摘要</string>
+    <string name="detail_diary">日记</string>
+    <string name="detail_emotion">情绪</string>
+    <string name="detail_no_content">暂无内容</string>
+
+    <!-- 配置 -->
+    <string name="hint_api_url">AI 接口地址 (OpenAI 兼容 /v1/chat/completions)</string>
+    <string name="hint_api_key">API Key</string>
+    <string name="hint_model">分析模型 (如 gpt-4o-mini)</string>
+    <string name="hint_transcribe_url">Whisper 转写地址 (/v1/audio/transcriptions)</string>
+    <string name="hint_transcribe_model">转写模型 (如 whisper-1)</string>
+    <string name="label_transcribe_mode">转写模式</string>
+    <string name="mode_off">关闭（仅存录音）</string>
+    <string name="mode_local">使用内置模型</string>
+    <string name="mode_whisper">Whisper 接口</string>
+    <string name="mode_ai">AI 大模型</string>
+    <string name="label_analyze_mode">AI 分析模式</string>
+    <string name="mode_analyze_cloud">云端大模型</string>
+    <string name="mode_analyze_local">本地离线分析</string>
+    <string name="llm_model_not_downloaded">本地模型未下载</string>
+    <string name="llm_model_not_downloaded_partial">本地模型未下载（已下载 %1$dMB）</string>
+    <string name="llm_model_downloaded">本地模型已就绪（%1$dMB）</string>
+    <string name="llm_download">下载</string>
+    <string name="llm_redownload">重新下载</string>
+    <string name="llm_downloading">下载中… %1$d%%</string>
+    <string name="llm_download_success">模型下载完成</string>
+    <string name="llm_download_failed">下载失败：%1$s</string>
+    <string name="model_delete">删除</string>
+    <string name="model_delete_confirm">确认删除本地模型？删除后需重新下载才能使用离线功能。</string>
+    <string name="model_delete_success">本地模型已删除</string>
+    <string name="model_not_downloaded_cant_delete">模型未下载，无需删除</string>
+    <string name="model_redownload_confirm">模型已下载，是否删除并重新下载？</string>
+    <string name="model_redownload">删除重下</string>
+
+    <!-- 充电自动触发 -->
+    <string name="label_auto_options">充电自动处理</string>
+    <string name="switch_auto_transcribe">充电时自动转写</string>
+    <string name="switch_auto_transcribe_desc">连接电源后自动将未转写录音转为文字</string>
+    <string name="switch_auto_analyze">充电时自动 AI 分析</string>
+    <string name="switch_auto_analyze_desc">连接电源后自动生成当日日记与情绪分析</string>
+
+    <!-- 定时录音 -->
+    <string name="label_schedule_recording">定时录音</string>
+    <string name="switch_schedule_recording">启用定时录音</string>
+    <string name="schedule_start_time">自动开始时间</string>
+    <string name="schedule_stop_time">自动停止时间</string>
+    <string name="schedule_start_title">设置录音开始时间</string>
+    <string name="schedule_stop_title">设置录音停止时间</string>
+
+    <!-- 云备份 -->
+    <string name="label_backup">数据备份与恢复</string>
+    <string name="label_webdav_config">坚果云 WebDAV 配置</string>
+    <string name="hint_webdav_url">WebDAV 服务器地址</string>
+    <string name="hint_webdav_email">坚果云账号邮箱</string>
+    <string name="hint_webdav_password">应用密码（非登录密码）</string>
+    <string name="btn_backup_cloud">备份到坚果云</string>
+    <string name="btn_backup_local">备份到本地</string>
+    <string name="btn_restore_local">从本地恢复</string>
+    <string name="btn_restore_cloud">从坚果云恢复</string>
+    <string name="switch_auto_backup">充电时自动云端备份</string>
+    <string name="switch_auto_backup_on_start">打开软件时自动备份</string>
+    <string name="backup_in_progress">正在备份…</string>
+    <string name="backup_success">备份成功：%1$s</string>
+    <string name="backup_failed">备份失败：%1$s</string>
+    <string name="restore_in_progress">正在恢复…</string>
+    <string name="restore_success">恢复成功：%1$s</string>
+    <string name="restore_failed">恢复失败：%1$s</string>
+    <string name="restore_confirm_title">确认恢复</string>
+    <string name="restore_confirm_msg">恢复将覆盖当前数据，且不可撤销。确定继续？</string>
+    <string name="backup_select_folder">选择备份文件夹</string>
+    <string name="restore_select_file">选择备份文件</string>
+    <string name="backup_data_desc">备份内容：转写文字、AI 分析结果、笔记、聊天记录、设置（不含音频和模型）</string>
+
+    <string name="label_auto_delete">自动删除已转写旧录音</string>
+    <string name="switch_auto_delete">自动删除已转写旧录音（保留文字）</string>
+    <string name="label_auto_delete_days">保存天数</string>
+    <string name="label_days">天</string>
+    <string name="label_deleted">已删除</string>
+
+    <string name="save_config">保存配置</string>
+
+    <!-- 界面与模型配置 -->
+    <string name="label_ui_options">界面设置</string>
+    <string name="switch_default_collapse">AI 分析页默认折叠录音</string>
+    <string name="theme_mode">深色模式</string>
+    <string name="theme_mode_system">跟随系统</string>
+    <string name="theme_mode_light">浅色</string>
+    <string name="theme_mode_dark">深色</string>
+    <string name="label_model_links">模型下载链接</string>
+    <string name="hint_asr_model_url">语音转文字模型下载链接</string>
+    <string name="hint_llm_model_url">本地离线分析模型下载链接</string>
+    <string name="model_link_hint">填写 GitHub Release 等直链</string>
+    <string name="asr_model_not_downloaded">本地模型未下载</string>
+    <string name="asr_model_not_downloaded_partial">本地模型未下载（已下载 %1$dMB）</string>
+    <string name="asr_model_downloaded">本地模型已下载（%1$dMB）</string>
+    <string name="asr_downloading">下载中… %1$d%%</string>
+    <string name="asr_download_success">模型下载完成</string>
+    <string name="asr_download_failed">下载失败：%1$s</string>
+    <string name="me_github">项目主页</string>
+    <string name="github_url">https://github.com/TS-dinglilu/ai_diary_app</string>
+    <string name="app_repo_name">ai_diary_app</string>
+    <string name="title_settings">设置</string>
+    <string name="me_permission">权限管理</string>
+    <string name="me_permission_desc">点击跳转系统权限设置</string>
+    <string name="me_backup">云备份</string>
+    <string name="me_update">检查更新</string>
+
+    <!-- 删除录音 -->
+    <string name="btn_delete_records">删除录音</string>
+    <string name="delete_title">选择要删除的录音</string>
+    <string name="delete_confirm">确认删除</string>
+    <string name="delete_cancel">取消</string>
+    <string name="delete_selected_count">已选 %1$d 项</string>
+    <string name="delete_confirm_msg">确认删除选中的 %1$d 条录音？音频文件和转写内容将一并删除，此操作不可撤销。</string>
+    <string name="delete_confirm_msg_audio">确认删除选中的 %1$d 条录音？将删除音频文件，保留转写文字，此操作不可撤销。</string>
+    <string name="delete_confirm_msg_transcript">确认删除选中的 %1$d 条录音？将删除转写文字，保留录音文件，此操作不可撤销。</string>
+    <string name="delete_success">已删除 %1$d 条录音</string>
+    <string name="delete_none_selected">请先选择要删除的录音</string>
+    <string name="filter_all_dates">全部日期</string>
+    <string name="filter_all_status">全部状态</string>
+    <string name="filter_untranscribed">未转写</string>
+    <string name="filter_transcribed">已转写</string>
+    <string name="select_all">全选</string>
+    <string name="deselect_all">取消全选</string>
+    <string name="select_all_date">全选当天</string>
+    <string name="delete_type_label">删除内容</string>
+    <string name="delete_type_audio">只删录音（保留文字）</string>
+    <string name="delete_type_transcript">只删文字（保留录音）</string>
+    <string name="delete_type_both">录音和文字都删</string>
+    <string name="delete_empty">没有符合条件的录音</string>
+
+    <!-- 权限 -->
+    <string name="perm_rationale">需要录音权限才能记录音频</string>
+    <string name="battery_optimization">建议关闭电池优化以保证录音不被中断</string>
+
+    <!-- 更新检查与通用提示 -->
+    <string name="msg_checking_update">正在检查更新…</string>
+    <string name="msg_update_available">发现新版本 %1$s</string>
+    <string name="btn_update_later">稍后再说</string>
+    <string name="btn_update_download">下载更新</string>
+    <string name="msg_already_latest">已是最新版本</string>
+    <string name="msg_downloading_update">下载中 %1$d%%</string>
+    <string name="msg_avatar_failed">设置头像失败</string>
+    <string name="msg_avatar_unreadable">无法读取图片</string>
+    <string name="msg_triggered_transcribe">已触发转写</string>
+    <string name="msg_triggered_analyze">已触发分析</string>
+    <string name="msg_config_saved">配置已保存</string>
+    <string name="msg_deleted_records">已删除 %1$d 条录音</string>
+    <string name="msg_schedule_enabled">定时录音已启用</string>
+    <string name="msg_schedule_disabled">定时录音已关闭</string>
+    <string name="msg_fill_download_url">请先填写模型下载链接</string>
+</resources>

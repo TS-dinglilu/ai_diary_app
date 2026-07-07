@@ -1,0 +1,22 @@
+<resources>
+    <!-- 微信风格浅色主题 -->
+    <color name="bg_base">#F5F5F5</color>
+    <color name="bg_surface">#FFFFFF</color>
+    <color name="bg_elevated">#FAFAFA</color>
+    <color name="divider">#E8E8E8</color>
+
+    <!-- 微信绿 -->
+    <color name="wechat_green">#07C160</color>
+    <color name="wechat_green_light">#95EC69</color>
+    <color name="wechat_green_dark">#06AD56</color>
+
+    <!-- 录音状态红 -->
+    <color name="accent_record">#FA5151</color>
+
+    <!-- 文字 -->
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#888888</color>
+    <color name="text_tertiary">#B0B0B0</color>
+
+    <color name="accent_action">#07C160</color>
+</resources>

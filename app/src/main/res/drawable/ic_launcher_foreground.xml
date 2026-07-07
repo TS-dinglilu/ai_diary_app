@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 自适应图标前景：黑色大写R -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 黑色大写R字母，居中显示 -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M38,28h22c8.8,0 16,7.2 16,16c0,6.3 -3.7,11.8 -9.1,14.5l11.1,21.5h-9.3l-9.7 -19.2h-6v19.2h-15V28zM53,40h-15v8h15c4.4,0 8,-3.6 8,-8s-3.6,-8 -8,-8z" />
+</vector>

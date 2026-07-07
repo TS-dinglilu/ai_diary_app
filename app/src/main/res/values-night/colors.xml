@@ -1,0 +1,22 @@
+<resources>
+    <!-- 深色模式配色：Material Design 3 深色主题规范 -->
+    <color name="bg_base">#0F0F0F</color>
+    <color name="bg_surface">#1A1A1A</color>
+    <color name="bg_elevated">#242424</color>
+    <color name="divider">#333333</color>
+
+    <!-- 微信绿（深色模式下提亮以保持对比度） -->
+    <color name="wechat_green">#10B981</color>
+    <color name="wechat_green_light">#1B3A2E</color>
+    <color name="wechat_green_dark">#0E8C5F</color>
+
+    <!-- 录音状态红 -->
+    <color name="accent_record">#EF4444</color>
+
+    <!-- 文字（提升可读性） -->
+    <color name="text_primary">#F5F5F5</color>
+    <color name="text_secondary">#B3B3B3</color>
+    <color name="text_tertiary">#808080</color>
+
+    <color name="accent_action">#10B981</color>
+</resources>

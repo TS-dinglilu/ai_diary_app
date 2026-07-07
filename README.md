@@ -1,0 +1,151 @@
+# AI 日记 (AI Diary App)
+
+一款基于 Android 的智能语音日记应用，自动录音、语音转文字、AI 情绪分析与日记生成，支持本地离线模型。
+
+> **项目主页**: <https://github.com/TS-dinglilu/ai_diary_app>
+
+## 功能特性
+
+### 录音
+- 自动启动录音，应用打开即开始记录
+- AudioRecord + WAV 格式，44 字节头先写入，保证即时可播放
+- 每 3 分钟自动分段，最小化数据丢失
+- 每 3 秒 fsync 强制写盘并更新 WAV 头
+- 麦克风冲突检测（微信语音、通话等）立即停止录音
+- 进程被杀时保存当前录音，重启后恢复孤儿文件并开始新录音
+
+### 语音转文字（ASR）
+- 支持四种模式：关闭 / 本地离线（sherpa-onnx）/ Whisper / 云端 AI
+- 本地离线模式基于 sherpa-onnx（Next-gen Kaldi），无需网络
+- 说话人分离支持
+- 重新转写 / 继续转写（按日期或单条）
+
+### AI 分析
+- 云端分析：支持 OpenAI 兼容 API
+- 本地离线分析：MediaPipe LLM Inference + Gemma-2 2B int8 量化模型（~1.8GB）
+- 生成情绪评分、摘要、日记内容
+- 按日期聚合展示
+
+### AI 分析界面
+- 日期分组，两行头部布局（日期+操作 / 转写状态+录音数）
+- 重新转写（红色）、继续转写（绿色）按钮
+- 转写状态实时显示：正在转写 / 全部完成 / 部分完成
+- 点击转写或分析内容进入详情页查看完整内容
+- 详情页可编写笔记，笔记独立展示不受日期折叠影响
+- 设置中可切换默认折叠/展开录音
+
+### AI 聊天
+- 基于上下文的多轮对话
+- 支持云端和本地离线模型
+
+### 定时录音
+- 自定义自动开始/停止时间（如 7:30 开始、23:00 停止）
+- 基于 AlarmManager 精确触发，设备重启后自动恢复
+
+### 数据备份与恢复
+- **坚果云 WebDAV 云备份**：备份转写文字、AI 分析结果、笔记、聊天记录、设置（不含音频和模型文件）
+- **本地 ZIP 备份**：选择文件夹，将数据打包为 ZIP 压缩包
+- **从云端恢复** / **从本地恢复**：一键恢复数据
+- 打开软件时自动备份到坚果云（可关闭）
+- 充电时自动云端备份（可关闭）
+
+### 深色模式
+- Material Design 3 深色主题
+- 浅色/深色/跟随系统三种模式
+- 深色模式配色专门优化，对比度高、层次分明
+
+### GitHub 自动更新
+- 检查 GitHub Releases 最新版本
+- 下载 APK 并触发安装
+
+## 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 语言 | Kotlin |
+| 架构 | MVVM + Room + ViewBinding |
+| 录音 | AudioRecord + WAV |
+| 语音转文字 | sherpa-onnx (本地) / Whisper (本地) / 云端 API |
+| AI 分析 | MediaPipe LLM Inference 0.10.14 (本地) / 云端 API |
+| 本地模型 | Gemma-2 2B int8 量化 |
+| 数据库 | Room (SQLite) |
+| 后台任务 | WorkManager |
+| UI | Material Design 3 |
+
+## 项目结构
+
+```
+ai_diary_app/
+├── app/
+│   └── src/main/
+│       ├── assets/
+│       │   ├── sherpa/          # 语音转文字模型（编译进 APK）
+│       │   │   ├── sense-voice.onnx
+│       │   │   └── tokens.txt
+│       │   └── llm/             # 本地离线 AI 分析模型（编译进 APK）
+│       │       └── gemma-2b-it.bin
+│       └── java/com/example/ailogapp/
+│           ├── ai/              # AI 分析与 LLM 推理
+│           ├── data/            # Room 数据库、Entity、DAO
+│           ├── fragment/        # Fragment（聊天、分析、设置）
+│           ├── service/         # 录音服务
+│           ├── ui/              # RecyclerView Adapter、数据项
+│           ├── util/            # 工具类（PrefsManager、FileUtils 等）
+│           └── worker/          # WorkManager 后台任务
+├── gradle/
+├── settings.gradle.kts
+└── build.gradle.kts
+```
+
+## 快速开始
+
+### 环境要求
+- Android Studio
+- JDK 17+
+- Android SDK 34（targetSdk）
+- minSdk 26
+
+### 构建
+```bash
+./gradlew assembleDebug
+```
+
+### 模型文件
+
+两个模型均已打包在 APK 中，无需额外下载：
+
+| 模型 | 用途 | 打包位置 | 大小 |
+|------|------|---------|------|
+| sense-voice.onnx | 语音转文字 | `app/src/main/assets/sherpa/` | ~937MB |
+| gemma-2b-it.bin | 本地离线 AI 分析 | `app/src/main/assets/llm/` | ~1.8GB |
+
+> 注意：LLM 模型在首次使用本地离线分析时，会从 APK 内自动复制到应用私有目录（filesDir），需要约 1.8GB 存储空间。
+
+## 配置说明
+
+| 配置项 | 说明 |
+|--------|------|
+| 转写模式 | 关闭 / 本地离线 / Whisper / 云端 AI |
+| AI 分析模式 | 云端 / 本地离线 |
+| 自动转写 | 充电时自动触发 |
+| 自动分析 | 充电时自动触发 |
+| 自动删除 | 超过 N 天的录音文件自动删除（保留文字） |
+| 默认折叠 | AI 分析页日期默认折叠录音条目 |
+| 深色模式 | 浅色 / 深色 / 跟随系统 |
+| 定时录音 | 自定义自动开始/停止时间 |
+| 坚果云备份 | WebDAV 地址/邮箱/密钥配置 |
+| 本地备份 | 选择文件夹导出 ZIP |
+| 启动自动备份 | 打开软件时自动备份到坚果云 |
+| 模型链接 | ASR / LLM 模型下载链接（GitHub Release 直链） |
+
+## 依赖的第三方库
+
+- [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) - 语音识别
+- [MediaPipe LLM Inference](https://ai.google.dev/edge/mediapipe/solutions/genai/llm_inference) - 本地大模型推理
+- Room - 数据库
+- WorkManager - 后台任务
+- Material Components for Android - UI 组件
+
+## License
+
+MIT

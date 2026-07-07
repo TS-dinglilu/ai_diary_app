@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 日期头部（两行布局） -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingHorizontal="20dp"
+    android:paddingTop="24dp"
+    android:paddingBottom="8dp">
+
+    <!-- 第一行：日期（左） + 重新转写/继续转写（右） -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <View
+            android:layout_width="3dp"
+            android:layout_height="16dp"
+            android:background="@color/accent_action"
+            android:layout_marginEnd="10dp" />
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"
+            tools:text="2026-07-03" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- 日期级重新转写按钮（红色） -->
+        <TextView
+            android:id="@+id/btnRetranscribeDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:text="@string/journal_retranscribe"
+            android:textColor="@color/accent_record"
+            android:textSize="11sp"
+            android:background="@drawable/bg_retranscribe_btn"
+            android:clickable="true"
+            android:focusable="true"
+            tools:visibility="visible" />
+
+        <!-- 日期级继续转写按钮（绿色） -->
+        <TextView
+            android:id="@+id/btnContinueTranscribeDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:text="@string/journal_continue_transcribe"
+            android:textColor="@color/wechat_green"
+            android:textSize="11sp"
+            android:background="@drawable/bg_continue_btn"
+            android:clickable="true"
+            android:focusable="true"
+            tools:visibility="visible" />
+
+        <ImageView
+            android:id="@+id/ivArrow"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/ic_arrow_right"
+            android:contentDescription="@null" />
+    </LinearLayout>
+
+    <!-- 第二行：转写状态 + 录音条数 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="4dp">
+
+        <!-- 转写状态文案 -->
+        <TextView
+            android:id="@+id/tvTranscribeStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp"
+            tools:text="正在转写" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <!-- 录音条数 -->
+        <TextView
+            android:id="@+id/tvRecordCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_tertiary"
+            android:textSize="11sp"
+            android:layout_marginEnd="22dp"
+            tools:text="3 段录音" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/divider" />
+</LinearLayout>

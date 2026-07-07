@@ -4,6 +4,17 @@
 
 > **项目主页**: <https://github.com/TS-dinglilu/ai_diary_app>
 
+## 应用截图
+
+| AI 聊天 | AI 分析 | 设置 | 个人中心 |
+|:---:|:---:|:---:|:---:|
+| ![聊天](pictures/微信图片_20260707185927_188_24.jpg) | ![AI分析](pictures/微信图片_20260707185927_189_24.jpg) | ![设置](pictures/微信图片_20260707185928_190_24.jpg) | ![我的](pictures/微信图片_20260707185929_191_24.jpg) |
+
+- **AI 聊天**：多轮对话，基于录音转写和 AI 分析上下文的智能助手
+- **AI 分析**：按日期分组展示转写状态、情绪分析、日记内容，支持手动编写笔记
+- **设置**：录音控制、转写模式切换、定时录音、模型管理、备份配置一体化界面
+- **个人中心**：录音管理、设置入口、权限管理、版本更新、项目主页
+
 ## 功能特性
 
 ### 录音
@@ -92,6 +103,7 @@ ai_diary_app/
 │           ├── ui/              # RecyclerView Adapter、数据项
 │           ├── util/            # 工具类（PrefsManager、FileUtils 等）
 │           └── worker/          # WorkManager 后台任务
+├── pictures/                    # 应用截图
 ├── gradle/
 ├── settings.gradle.kts
 └── build.gradle.kts

@@ -31,11 +31,15 @@ An Android-based intelligent voice diary app that automatically records audio, t
 - Speaker diarization support
 - Re-transcribe / Continue transcription (by date or individual entry)
 
+> **Recommended: Use Local Offline mode.** Speech-to-Text runs locally with low power consumption and heat, and requires no network — ideal for continuous long-duration recording and transcription.
+
 ### AI Analysis
 - Cloud analysis: Supports OpenAI-compatible APIs
 - Local offline analysis: MediaPipe LLM Inference + Gemma-2 2B int8 quantized model (~1.8GB)
 - Generates sentiment scores, summaries, and diary content
 - Aggregated display by date
+
+> **Recommended: Use Cloud model.** Local offline AI analysis is based on Gemma-2 2B LLM inference, which causes significant power consumption and heat during operation, making it unsuitable for frequent use. Cloud models are faster, produce better results, and consume no device resources.
 
 ### AI Chat
 - Multi-turn dialogue with context awareness

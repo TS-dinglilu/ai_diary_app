@@ -98,13 +98,13 @@ class MeFragment : Fragment() {
             startActivity(intent)
         }
 
-        // 检查更新：若已有新版本待下载，则直接下载；否则发起检查
+        // 检查更新：若已有新版本待下载，则直接下载；否则发起手动检查（弹窗）
         binding.layoutUpdate.setOnClickListener {
             val url = pendingApkUrl
             if (!url.isNullOrBlank()) {
                 downloadAndInstallUpdate(url)
             } else {
-                checkForUpdate()
+                checkForUpdateManual()
             }
         }
 
@@ -131,13 +131,39 @@ class MeFragment : Fragment() {
         } catch (e: Exception) {
             binding.tvVersion.text = ""
         }
+
+        // 进入页面时后台静默检查更新（不弹窗、不 Toast，只更新绿色提示）
+        checkForUpdateSilent()
     }
 
     /** 待下载的 APK 链接（检查到新版本后暂存，用户点击后触发下载） */
     private var pendingApkUrl: String? = null
 
-    /** 检查 GitHub 最新版本，有新版本时在"检查更新"旁显示提示 */
-    private fun checkForUpdate() {
+    /** 下载进度对话框 */
+    private var downloadDialogInstance: android.app.Dialog? = null
+
+    /** 后台静默检查更新：有新版本时仅显示绿色"有可用更新"文字 */
+    private fun checkForUpdateSilent() {
+        val ctx = requireContext()
+        viewLifecycleOwner.lifecycleScope.launch {
+            UpdateChecker.checkForUpdate(ctx).collect { state ->
+                when (state) {
+                    is UpdateChecker.UpdateState.UpdateAvailable -> {
+                        pendingApkUrl = state.apkUrl
+                        _binding?.tvUpdateHint?.visibility = View.VISIBLE
+                    }
+                    is UpdateChecker.UpdateState.NoUpdate -> {
+                        pendingApkUrl = null
+                        _binding?.tvUpdateHint?.visibility = View.GONE
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    /** 手动检查更新：用户点击"检查更新"时调用，有新版本弹窗询问是否下载 */
+    private fun checkForUpdateManual() {
         val ctx = requireContext()
         binding.tvUpdateHint.visibility = View.GONE
         Toast.makeText(ctx, getString(R.string.msg_checking_update), Toast.LENGTH_SHORT).show()
@@ -147,7 +173,17 @@ class MeFragment : Fragment() {
                     is UpdateChecker.UpdateState.UpdateAvailable -> {
                         pendingApkUrl = state.apkUrl
                         binding.tvUpdateHint.visibility = View.VISIBLE
-                        Toast.makeText(ctx, getString(R.string.msg_update_available, state.version), Toast.LENGTH_SHORT).show()
+                        // 弹窗询问是否下载
+                        com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
+                            .setTitle(getString(R.string.msg_update_available, state.version))
+                            .setMessage(state.description)
+                            .setNegativeButton(getString(R.string.btn_update_later)) { _, _ ->
+                                pendingApkUrl = state.apkUrl
+                            }
+                            .setPositiveButton(getString(R.string.btn_update_download)) { _, _ ->
+                                downloadAndInstallUpdate(state.apkUrl)
+                            }
+                            .show()
                     }
                     is UpdateChecker.UpdateState.NoUpdate -> {
                         pendingApkUrl = null
@@ -163,31 +199,48 @@ class MeFragment : Fragment() {
         }
     }
 
-    /** 下载 APK 并触发安装（用户点击"检查更新"且已有新版本时触发） */
+    /** 下载 APK 并触发安装，显示下载进度弹窗 */
     private fun downloadAndInstallUpdate(apkUrl: String) {
         val ctx = requireContext()
         if (apkUrl.isBlank()) {
             Toast.makeText(ctx, "未找到 APK 下载链接，请前往 GitHub 手动下载", Toast.LENGTH_LONG).show()
             return
         }
+
+        // 创建下载进度弹窗
+        val progressBar = android.widget.ProgressBar(ctx, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            progress = 0
+            isIndeterminate = false
+            val pad = (16 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad, pad, pad)
+        }
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(ctx)
+            .setTitle(R.string.msg_downloading)
+            .setView(progressBar)
+            .setCancelable(false)
+            .setNegativeButton(R.string.btn_cancel) { _, _ ->
+                // 取消下载：关闭弹窗，保留 pendingApkUrl 供再次点击
+            }
+            .create()
+        dialog.show()
+        downloadDialogInstance = dialog
+
         viewLifecycleOwner.lifecycleScope.launch {
             UpdateChecker.downloadApk(ctx, apkUrl).collect { state ->
                 when (state) {
                     is UpdateChecker.UpdateState.Downloading -> {
-                        _binding?.tvVersion?.let { it.text = "${state.progress}%" }
+                        progressBar.progress = state.progress
+                        dialog.setTitle("${getString(R.string.msg_downloading)} ${state.progress}%")
                     }
                     is UpdateChecker.UpdateState.Downloaded -> {
-                        _binding?.tvVersion?.let {
-                            val pkgInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
-                            it.text = "v${pkgInfo.versionName}"
-                        }
+                        dialog.dismiss()
+                        downloadDialogInstance = null
                         UpdateChecker.installApk(ctx, state.apkPath)
                     }
                     is UpdateChecker.UpdateState.Error -> {
-                        _binding?.tvVersion?.let {
-                            val pkgInfo = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
-                            it.text = "v${pkgInfo.versionName}"
-                        }
+                        dialog.dismiss()
+                        downloadDialogInstance = null
                         Toast.makeText(ctx, state.message, Toast.LENGTH_LONG).show()
                     }
                     else -> {}
@@ -302,6 +355,8 @@ class MeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        downloadDialogInstance?.dismiss()
+        downloadDialogInstance = null
         super.onDestroyView()
         _binding = null
     }
